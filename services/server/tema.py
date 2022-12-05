@@ -1,19 +1,80 @@
-from flask import Flask, json, Response, request
+from flask import Flask, json, Response, request, jsonify
 from itertools import count, filterfalse
+from functools import reduce
+import psycopg2
 
 server = Flask(__name__)
-MOVIES = {}
+
+conn = psycopg2.connect(host='db',
+							port='5432',
+							user='meteo_user',
+							password='meteo_pass',
+							database='meteo_db')
+	
+conn.autocommit=True	
+curr = conn.cursor()
+# def _check_body(request, fields): 
+# 	return all(filed in request.json and type(request.json[field]) in types
+# 			for field, types in fields.items())
 
 
-def _get_first_available_id():
-	return next(filterfalse(set(MOVIES.keys()).__contains__, count(1)))
+@server.route("/api/countries", methods=["POST"])
+def add_country():
+	data = request.json
+	types_ref = ['str', 'float', 'float']
+
+	request_types = []
+	for val in request.json:
+		request_types.append(type(request.json[val]).__name__)
+	# verific daca argumentele au tipul potrivit
+	if (types_ref!=request_types):
+		return Response(
+			status=400)
+	
+	try:
+		curr.execute('INSERT INTO Tari(nume_tara, latitudine, longitudine) VALUES (%s, %s, %s) RETURNING id',  (data['nume'], data['lat'], data['lon']))
+		returned_id = curr.fetchone()[0]
+	
+	except psycopg2.Error: 
+		# exista deja o tara cu acelasi id
+		return Response(
+			status=409)
+
+	response = {'id':returned_id}
+	return Response(
+		response=json.dumps(response),
+		status=201
+	)
+
+@server.route("/api/countries/<id>", methods=["POST"])
+def get_countries(id=None):
+	data = request.json
+	types_ref = ['str', 'float', 'float']
+
+	request_types = []
+	for val in request.json:
+		request_types.append(type(request.json[val]).__name__)
+	# verific daca argumentele au tipul potrivit
+	if (types_ref!=request_types):
+		return Response(
+			status=400)
+	
+	try:
+		curr.execute('INSERT INTO Tari(nume_tara, latitudine, longitudine) VALUES (%s, %s, %s) RETURNING id',  (data['nume'], data['lat'], data['lon']))
+		returned_id = curr.fetchone()[0]
+	
+	except psycopg2.Error: 
+		# exista deja o tara cu acelasi id
+		return Response(
+			status=409)
+
+	response = {'id':returned_id}
+	return Response(
+		response=json.dumps(response),
+		status=201
+	)
 
 
-@server.route("/", methods=["GET"])
-def get_all():
-	return Response(status=200)
-
-@server.route("/movies", methods=["GET", "POST"])
 @server.route("/movie/<id>", methods=["GET", "PUT", "DELETE"])
 def handle_request(id=None):
 	global MOVIES
