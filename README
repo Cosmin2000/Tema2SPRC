@@ -1,0 +1,53 @@
+Grigore Cosmin
+342C1
+
+
+                            Tema 2 - REST API & Docker
+                                    SPRC
+
+Docker:
+    Pentru API am construit o imagine folosind un Dockerfile pe care l-am implementat dupa modelul 
+celui din laboratorul de Docker.
+    Pentru ca serverul sa porneasca dupa initializarea bazei am folosit un script
+"wait-for-it.sh" pe care l-am luat din documentatia oficiala. [https://docs.docker.com/compose/startup-order/]
+    Pentru constructia microserviciilor cu docker compose am implementat fiserul "tema.yml" pe care l-am 
+implementat tot dupa modelul celui din laboratorul de Docker si microservicii.
+    Am construit 2 retele: una care contine server-ul si baza de date si una care contine baza de date 
+si utiliarul de gestiune.
+    Am ales baza de date relationala PostgreSQL.
+    Am folosit chei straine, cu cascadare la stergere.
+    Am ales pgAdmin drept utilitar pentru gestiunea bazei de date.
+    Pentru environment am creat 2 fisiere:
+    - "credentials.env" contine credentialele de acces la baza de date si la Utilitar 
+    - ".env" contine porturile celor 3 microservicii (porturile expuse)
+    Pentru construirea bazei de date, am folosit un script sql "init.sql".
+
+API:
+    Pentru implementarea API-ului am folosit Flask, pentru baza de date PostgreSQL, iar pentru legatura cu 
+baza de date am folosit adaptorul Psycopg2.
+    Am incercat sa elimin codul duplicat, asa ca am facut o functie cat de cat generica pentru fiecare 
+tip ce cerere.
+    Pentru cereri de tip POST, am implementat functia <make_post_request> care verifica daca request-ul este 
+valid, in caz negativ raspunde cu 400(Bad Request), altfel formeaza parametrii pentru query, executa 
+insert-ul in baza de date si apoi trateaz eventualele erori. In cazul in care nu gaseste ceva (de exemplu 
+face post la un oras cu un id_tara care nu exista in tabela tari), intoarce 404, iar in cazul in care avem duplicate 
+(se incalca constrangerea de unicitate), de exemplu, se face post unei tari al carei nume exista deja, se intoarce 
+codul 409.
+    Pentru cereri de tip PUT, am implementat functia <make_put_request> care are aproximativ acelasi comportament 
+cu <make_post_request> (mai face si o verificare pentru id-ul primit si face query de tip UPDATE, nu INSERT).
+    Pentru cereri de tip DELETE, am implementat functia <make_delete_request> care verifica daca id-ul e null,
+face Delete-ul, iar daca nu s-a gasit, returneaza 404, altfel 200.
+    Pentru cereri de tip GET, am implementat functia <make_get_request> care face select-ul si apoi parseaza datele 
+pe care le returneaza.
+    Pentru a verifica daca un request este valid, am implementat functia <valid_body> care verifica daca 
+tipurile si campurile sunt cele asteptate.
+    Pentru a procesa datele primite de la un request GET, am implementat functia <process_get_request> care 
+itereaza prin datele primite de la query si construieste un dictionar cu campurile dorite.
+    Am implementat si functia <json_response> care returneaza un raspuns de tip JSON.
+    Am facut o functie comuna si pentru cererile GET pentru temperatura dupa oras si dupa tara.
+    La cererile GET de la temperatura construiesc clauza in functie de ce parametrii de request primesc, iar apoi am acelasi 
+comportament ca la celealte cereri GET.
+    Pentru fiecare ruta, construiesc dupa caz, tipurile si campurile asteptate, campurile pentru raspuns si 
+query-ul iar apoi apelez functia corespunzatoare de request.
+
+

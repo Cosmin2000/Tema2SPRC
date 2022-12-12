@@ -4,10 +4,11 @@ services:
   server:
     depends_on:
       - db
-    build: ./services/server
+    build: ./server
     hostname: server
+    container_name: server
     volumes:
-      - ./services/server/:/tmp/app
+      - ./server/:/tmp/app
     command: ["./wait-for-it.sh", "db:${POSTGRES_PORT}","--", "python" , "tema.py" , "run", "-h", "0.0.0.0"]
     networks:
       - server-network
@@ -17,6 +18,7 @@ services:
     restart: always
     image: postgres:latest
     hostname: db
+    container_name: db
     env_file:
       - './credentials.env'
     volumes:
@@ -31,6 +33,7 @@ services:
     container_name: pgadmin4_container
     image: dpage/pgadmin4
     hostname: pgadmin
+    container_name: pgadmin
     restart: always
     env_file:
       - './credentials.env'
